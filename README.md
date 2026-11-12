@@ -1,14 +1,30 @@
-# Device Drivers
+# RTL87x3G M8102301 QSPI LCD Auto-Detect 360x360
 
-This repository contains external device drivers grouped by SoC, board,
-interface, and device function.
+This branch contains the M8102301 board-level QSPI LCD auto-detect
+integration for 360x360 panels.
 
-## Branch Model
+## Target
 
-- `master` contains documentation, branch conventions, and the branch index.
-- Driver implementation branches are named from the SoC, board, interface,
-  device type, and device-specific attributes.
-- Driver code must not be committed directly to `master`.
+- SoC: RTL87x3G
+- Board: M8102301
+- Interface: QSPI
+- Display resolution: 360x360
+- Driver mode: read the panel ID before initialization and dispatch to the
+  matching panel initialization sequence
 
-See [docs/branch-index.md](docs/branch-index.md) for the active branch list and
-[docs/branch-naming.md](docs/branch-naming.md) for the naming convention.
+## Supported Panel IDs
+
+| Panel | Normalized ID |
+| --- | --- |
+| ST77916 | `0x003F7F4F` |
+| GC9B71 | `0x004D387F` |
+
+The driver tries both supported DBIC read configurations because the panels do
+not use the same read mode.
+
+## Layout
+
+- `lcd/`: LCD auto-detect implementation and panel initialization data.
+
+The implementation currently originates from `HoneyRepo/driver/display` and
+will be migrated here without creating a second independently maintained copy.
