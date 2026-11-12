@@ -2,6 +2,9 @@
 
 This directory is reserved for the M8102301 QSPI LCD auto-detect driver.
 
+See [auto-detect-360x360.md](auto-detect-360x360.md) for the current design,
+supported panel IDs, initialization dispatch, and validation notes.
+
 Expected components:
 
 - Common QSPI/DBIC transport and panel ID detection.
