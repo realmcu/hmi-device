@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "description": "Phase 1 panel registry for 8773G SDI and RGB panels. Single source of truth for generated Kconfig/CMake/SConscript registration and CI build matrix.",
+  "defaults": {
+    "soc": "RTL87X3G",
+    "chip": "8773G",
+    "interface": "SDI",
+    "board": "rtl87x3g_sample",
+    "sample": "realtek-app/samples/honeygui",
+    "wrapper": "zephyr/display/rtl87x3g-display-lcd-qspi.c"
+  },
+  "panels": [
+    {
+      "id": "sh8601z_410_502_qspi",
+      "config": "REALTEK_LCD_SH8601Z_410_502_QSPI",
+      "name": "SH8601Z 410x502 QSPI",
+      "source": "panel/sdi/sh8601z_410_502_qspi.c",
+      "migrated": true,
+      "build": true,
+      "help": "Enable SH8601Z 410x502 QSPI panel",
+      "interface": "SDI"
+    },
+    {
+      "id": "st7801n_466_466_qspi",
+      "config": "REALTEK_LCD_ST7801N_466_466_QSPI",
+      "name": "ST7801N 466x466 QSPI",
+      "source": "panel/sdi/st7801n_466_466_qspi.c",
+      "migrated": true,
+      "build": true,
+      "help": "Enable ST7801N 466x466 QSPI panel",
+      "interface": "SDI"
+    },
+    {
+      "id": "st77916_360_360_qspi",
+      "config": "REALTEK_LCD_ST77916_360_360_QSPI",
+      "name": "ST77916 360x360 QSPI",
+      "source": "panel/sdi/st77916_360_360_qspi.c",
+      "migrated": true,
+      "build": true,
+      "help": "Enable ST77916 360x360 QSPI panel",
+      "interface": "SDI"
+    },
+    {
+      "id": "gc9b71_360_360_qspi",
+      "config": "REALTEK_LCD_GC9B71_360_360_QSPI",
+      "name": "GC9B71 360x360 QSPI",
+      "source": "panel/sdi/gc9b71_360_360_qspi.c",
+      "migrated": true,
+      "build": true,
+      "help": "Enable GC9B71 360x360 QSPI panel",
+      "interface": "SDI"
+    },
+    {
+      "id": "auto_360_360_qspi",
+      "config": "REALTEK_LCD_AUTO_360_360_QSPI",
+      "name": "Auto-detect 360x360 QSPI (ST77916/GC9B71)",
+      "source": "panel/sdi/auto_360_360_qspi.c",
+      "migrated": true,
+      "build": true,
+      "help": "Auto-detect ST77916 or GC9B71 360x360 QSPI panel",
+      "interface": "SDI"
+    },
+    {
+      "id": "ek9716_800_480_rgb",
+      "config": "REALTEK_LCD_EK9716_800_480_RGB",
+      "name": "EK9716 800x480 RGB",
+      "source": "panel/rgb/ek9716_800_480_rgb.c",
+      "interface": "RGB",
+      "chip": "8773G",
+      "migrated": true,
+      "build": true,
+      "help": "Enable EK9716 800x480 RGB panel"
+    },
+    {
+      "id": "jd9165ba_1024_600_rgb",
+      "config": "REALTEK_LCD_JD9165BA_1024_600_RGB",
+      "name": "JD9165BA 1024x600 RGB",
+      "source": "panel/rgb/jd9165ba_1024_600_rgb.c",
+      "interface": "RGB",
+      "chip": "8773G",
+      "migrated": true,
+      "build": true,
+      "help": "Enable JD9165BA 1024x600 RGB panel"
+    }
+  ]
+}

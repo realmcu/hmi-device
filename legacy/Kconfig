@@ -1,0 +1,31 @@
+# Copyright (c) 2026 Realtek Semiconductor Corp.
+# SPDX-License-Identifier: Apache-2.0
+#
+# QSPI panel symbols that are still used by 8773E legacy drivers.  The 8773G
+# copies of these panels were removed; keep the symbols available only on the
+# SoC that still has the legacy driver.
+
+menu "Realtek Legacy 8773E QSPI Panels"
+
+config REALTEK_LCD_C05300_390_450_QSPI
+    bool "Enable Realtek LCD Device Driver C05300 390 450 (8773E)"
+    depends on SOC_SERIES_RTL8773E
+    default n
+    help
+        Legacy 8773E C05300 390x450 QSPI panel.
+
+config REALTEK_LCD_NV3041A_480_272_QSPI
+    bool "Enable Realtek LCD Device Driver NV3041A 480 272 (8773E)"
+    depends on SOC_SERIES_RTL8773E
+    default n
+    help
+        Legacy 8773E NV3041A 480x272 QSPI panel.
+
+config REALTEK_SH8601Z_454454_QSPI
+    bool "Enable Realtek LCD Device Driver SH8601Z 454 454 (8773E)"
+    depends on SOC_SERIES_RTL8773E
+    default n
+    help
+        Legacy 8773E SH8601Z 454x454 QSPI panel.
+
+endmenu

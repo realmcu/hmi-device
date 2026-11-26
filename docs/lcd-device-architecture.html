@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RTL8773G LCD Device 架构</title>
+<style>
+  :root {
+    --bg:#f6f7f9; --panel:#fff; --ink:#1f2937; --muted:#667085;
+    --line:#dfe3e8; --brand:#0b6bcb; --brand-soft:#e8f1fc;
+    --green:#0f7b4f; --green-soft:#e7f6ee; --amber:#9a6700;
+    --amber-soft:#fff7df; --red:#b42318; --red-soft:#fdeceb;
+    --code:#101828; --code-ink:#e6edf3; --radius:12px;
+    --shadow:0 8px 24px rgba(15,23,42,.06);
+  }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body {
+    margin:0; background:var(--bg); color:var(--ink);
+    font:15px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",
+         "Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  }
+  a { color:var(--brand); text-decoration:none; }
+  a:hover { text-decoration:underline; }
+  .layout {
+    display:grid; grid-template-columns:270px minmax(0,1fr); gap:28px;
+    max-width:1440px; margin:0 auto; padding:28px;
+  }
+  .toc {
+    position:sticky; top:24px; align-self:start; max-height:calc(100vh - 48px);
+    overflow:auto; background:var(--panel); border:1px solid var(--line);
+    border-radius:var(--radius); padding:18px 16px; box-shadow:var(--shadow);
+  }
+  .toc h2 { margin:0 0 10px; font-size:14px; letter-spacing:.08em;
+            color:var(--muted); text-transform:uppercase; }
+  .toc ol { margin:0; padding-left:18px; }
+  .toc li { margin:6px 0; font-size:13.5px; }
+  .toc a { color:var(--ink); }
+  main { min-width:0; }
+  .hero {
+    background:linear-gradient(135deg,#0b3b75,#0b6bcb 60%,#2ea3a3);
+    color:#fff; border-radius:18px; padding:34px 34px 28px;
+    box-shadow:var(--shadow);
+  }
+  .hero h1 { margin:0 0 8px; font-size:30px; line-height:1.25; }
+  .hero p { margin:0; color:#dbeafe; max-width:900px; }
+  .hero .meta { margin-top:18px; display:flex; flex-wrap:wrap; gap:8px; }
+  .pill { display:inline-flex; align-items:center; gap:6px; padding:4px 10px;
+          border-radius:999px; font-size:12px; background:rgba(255,255,255,.14); }
+  .cards { display:grid; grid-template-columns:repeat(4,minmax(0,1fr));
+           gap:14px; margin:18px 0 0; }
+  .card { background:var(--panel); border:1px solid var(--line);
+          border-radius:var(--radius); padding:16px 18px; box-shadow:var(--shadow); }
+  .card .k { color:var(--muted); font-size:12px; letter-spacing:.04em; }
+  .card .v { font-size:24px; font-weight:700; margin-top:4px; }
+  .card .d { color:var(--muted); font-size:12.5px; margin-top:2px; }
+  section { background:var(--panel); border:1px solid var(--line);
+            border-radius:var(--radius); padding:28px 30px; margin-top:22px;
+            box-shadow:var(--shadow); }
+  h2 { font-size:21px; margin:0 0 12px; }
+  h2 .num { color:var(--brand); font-size:13px; letter-spacing:.08em;
+            display:block; margin-bottom:2px; }
+  h3 { font-size:16px; margin:22px 0 8px; }
+  p { margin:8px 0; }
+  .lead { color:var(--muted); }
+  code { font-family:ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;
+         background:#f1f3f5; padding:1px 5px; border-radius:4px; font-size:13px; }
+  pre { margin:12px 0; padding:16px 18px; overflow:auto; border-radius:10px;
+        background:var(--code); color:var(--code-ink); font-size:13px; line-height:1.6; }
+  pre code { background:none; padding:0; color:inherit; font-size:inherit; }
+  table { width:100%; border-collapse:collapse; margin:12px 0; font-size:14px; }
+  th,td { text-align:left; vertical-align:top; padding:9px 10px;
+          border-bottom:1px solid var(--line); }
+  th { background:#f8fafc; color:var(--muted); font-weight:600; }
+  .callout { border-left:4px solid var(--brand); background:var(--brand-soft);
+             padding:12px 16px; border-radius:0 8px 8px 0; margin:14px 0; }
+  .callout.green { border-color:var(--green); background:var(--green-soft); }
+  .callout.amber { border-color:var(--amber); background:var(--amber-soft); }
+  .callout.red { border-color:var(--red); background:var(--red-soft); }
+  .badge { display:inline-block; padding:1px 8px; border-radius:999px;
+           font-size:12px; font-weight:600; }
+  .done { background:var(--green-soft); color:var(--green); }
+  .warn { background:var(--amber-soft); color:var(--amber); }
+  .todo { background:var(--red-soft); color:var(--red); }
+  ul,ol { margin:8px 0; padding-left:22px; }
+  li { margin:4px 0; }
+  .muted { color:var(--muted); }
+  .small { font-size:13px; }
+  .flow { display:flex; flex-direction:column; align-items:center; margin:18px 0; }
+  .flow .node {
+    width:min(760px,100%); text-align:center; padding:10px 16px;
+    background:#f8fafc; border:1px solid var(--line); border-radius:10px;
+    font-size:13px; line-height:1.65;
+  }
+  .flow .node.library { background:var(--green-soft); border-color:#b7e2ca;
+    color:var(--green); font-weight:700; }
+  .flow .arrow { color:var(--brand); font-size:22px; line-height:1.1; }
+  @media (max-width:1000px) {
+    .layout { grid-template-columns:1fr; }
+    .toc { position:static; max-height:none; }
+    .cards { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="toc">
+  <h2>目录</h2>
+  <ol>
+    <li><a href="#status">当前状态</a></li>
+    <li><a href="#layers">分层</a></li>
+    <li><a href="#api">统一 API</a></li>
+    <li><a href="#irq">中断与等待</a></li>
+    <li><a href="#buffers">Buffer 与刷屏</a></li>
+    <li><a href="#panels">选屏与构建</a></li>
+    <li><a href="#build-flow">构建链路</a></li>
+    <li><a href="#legacy">Legacy 清理</a></li>
+    <li><a href="#os">Zephyr / FreeRTOS</a></li>
+    <li><a href="#build">构建与验证</a></li>
+    <li><a href="#next">后续工作</a></li>
+  </ol>
+</aside>
+
+<main>
+<header class="hero">
+  <h1>RTL8773G LCD Device 架构</h1>
+  <p>SDI / DBIB / RGB 统一设备层。HoneyGUI 只负责应用层 buffer 策略，
+     OS 只提供信号量和中断注册。</p>
+  <div class="meta">
+    <span class="pill">Phase 1 · RTL8773G</span>
+    <span class="pill">SDI · DBIB · RGB</span>
+    <span class="pill">DC_DOUBLE · DC_RAMLESS</span>
+    <span class="pill">Zephyr · FreeRTOS</span>
+  </div>
+</header>
+
+<div class="cards">
+  <div class="card"><div class="k">控制器</div><div class="v">2</div>
+    <div class="d">rtk_sdi / rtk_rgb</div></div>
+  <div class="card"><div class="k">完成中断</div><div class="v">1</div>
+    <div class="d">TX_AUTO_DONE</div></div>
+  <div class="card"><div class="k">面板</div><div class="v">7</div>
+    <div class="d">5 SDI + 2 RGB</div></div>
+  <div class="card"><div class="k">Legacy 8773G</div><div class="v">0</div>
+    <div class="d">已移出 device</div></div>
+</div>
+
+<section id="status">
+  <h2><span class="num">01</span>当前状态</h2>
+  <table>
+    <tr><th>项目</th><th>状态</th><th>说明</th></tr>
+    <tr><td>SDI / RGB 控制器分离</td><td><span class="badge done">完成</span></td>
+        <td>没有 <code>is_rgb</code> 分支；RGB 独立 eDPI controller</td></tr>
+    <tr><td>统一 facade</td><td><span class="badge done">完成</span></td>
+        <td><code>rtk_display_submit()</code> / <code>rtk_display_wait_complete()</code></td></tr>
+    <tr><td>统一 panel registry</td><td><span class="badge done">完成</span></td>
+        <td><code>registry/panels.json</code> 生成 Kconfig / CMake</td></tr>
+    <tr><td>QSPI 选屏</td><td><span class="badge done">完成</span></td>
+        <td>由 <code>prj.conf</code> 的 panel config 决定</td></tr>
+    <tr><td>Dashboard 接入</td><td><span class="badge done">完成</span></td>
+        <td><code>rtl87x3g_sample</code> + QSPI + DC_DOUBLE，构建通过</td></tr>
+    <tr><td>Full / PFB</td><td><span class="badge done">完成</span></td>
+        <td>DC_DOUBLE 与 DC_RAMLESS 均构建、实机验证</td></tr>
+    <tr><td>8773G legacy 清理</td><td><span class="badge done">完成</span></td>
+        <td>驱动与 <code>rtk_sdi_hal_*</code> 已移出 device</td></tr>
+    <tr><td>RGB 超时恢复</td><td><span class="badge warn">待补</span></td>
+        <td><code>CURR_SAR</code> 确认目前是无限等待</td></tr>
+  </table>
+</section>
+
+<section id="layers">
+  <h2><span class="num">02</span>分层</h2>
+  <p class="lead">PFB / FULL 属于 HoneyGUI 应用层；Zephyr / FreeRTOS 只在更下面。</p>
+<pre><code>HoneyGUI（应用 / UI）
+  DC_DOUBLE / DC_RAMLESS
+        │
+        ▼
+rtk_display_submit() / rtk_display_wait_complete()
+        │
+        ▼
+rtk_sdi / rtk_rgb
+        │
+        ▼
+LCDC / DBIB / eDPI
+        │
+        ▼
+Zephyr / FreeRTOS（semaphore + vector table）</code></pre>
+  <div class="callout">
+    <b>不要混淆：</b><br>
+    PFB / FULL = 应用层 buffer 模式。<br>
+    region = 传输 API 的区域语义。<br>
+    Zephyr / FreeRTOS = OS 集成，不参与 display 语义。
+  </div>
+</section>
+
+<section id="api">
+  <h2><span class="num">03</span>统一 API</h2>
+  <h3>提交</h3>
+<pre><code>int rtk_display_submit(rtk_display_t *disp,
+                       const uint8_t *buf,
+                       uint32_t len_pixels,
+                       uint32_t timeout_ms);
+
+int rtk_display_wait_complete(rtk_display_t *disp,
+                              uint32_t timeout_ms);
+
+int rtk_display_commit(rtk_display_t *disp,
+                       const uint8_t *buf,
+                       uint32_t len_pixels);
+
+int rtk_display_write_region(rtk_display_t *disp,
+                             uint16_t x, uint16_t y,
+                             uint16_t w, uint16_t h,
+                             const uint8_t *buf,
+                             uint32_t len_pixels);</code></pre>
+
+  <h3>submit 语义</h3>
+  <table>
+    <tr><th>类型</th><th>submit 内部行为</th><th>返回时</th></tr>
+    <tr><td>SDI / DBIB</td>
+        <td>等上一笔完成 → arm → start</td>
+        <td>当前传输异步进行</td></tr>
+    <tr><td>RGB</td>
+        <td>arm → switch address → 等 TX_AUTO_DONE + CURR_SAR</td>
+        <td>地址已切换，可安全画下一帧</td></tr>
+  </table>
+  <p><code>len_pixels</code> 是像素数，不是字节数。RGB 必须整帧；
+     SDI 支持 <code>write_region</code>。</p>
+
+  <h3>submit 后再等待</h3>
+<pre><code>rtk_display_submit(disp, buf, pixels, timeout);
+
+/* 可选：SDI 等待当前完成；RGB 已是 no-op */
+rtk_display_wait_complete(disp, timeout);</code></pre>
+  <p>状态由 <code>pending</code> 管理。显式 wait 会消费一次 pending，
+     下一次 submit 不会重复等待。超时则 pending 保留，下一次 submit 可重试。</p>
+</section>
+
+<section id="irq">
+  <h2><span class="num">04</span>中断与等待</h2>
+  <p>所有 controller 共用一个中断：</p>
+  <table>
+    <tr><th>项目</th><th>值</th></tr>
+    <tr><td>IRQ</td><td><code>Display_IRQn</code>（67）</td></tr>
+    <tr><td>Vector</td><td><code>DISPLAY_VECTORn</code></td></tr>
+    <tr><td>Status</td><td><code>LCDC_STATUS_TX_AUTO_DONE_INT</code></td></tr>
+    <tr><td>Mask</td><td><code>LCDC_INT_MASK_TX_AUTO_DONE</code></td></tr>
+    <tr><td>Clear</td><td><code>LCDC_CLR_TX_AUTO_DONE</code></td></tr>
+  </table>
+
+  <div class="callout red">
+    <b>关键：</b><code>LCDC_Init()</code> 会把 mask 位置 1（屏蔽）。
+    必须用 <code>LCDC_MaskINTConfig(..., DISABLE)</code> 解除
+    <code>TX_AUTO_DONE</code> 的 mask。用 <code>ENABLE</code> 会继续屏蔽，
+    表现就是等待永远不返回。
+  </div>
+
+<pre><code>static void rtk_display_irq_handler(void)
+{
+    if (LCDC_GetINTStatus(LCDC_STATUS_TX_AUTO_DONE_INT) == SET)
+    {
+        LCDC_ClearINTPendingBit(LCDC_CLR_TX_AUTO_DONE);
+        os_sem_give(display_sync_sem);
+    }
+}</code></pre>
+
+  <h3>初始化顺序</h3>
+<pre><code>rtk_display_init()
+  ├─ controller init（LCDC / DBIC / eDPI）
+  └─ rtk_display_irq_init()
+       ├─ os_sem_create()
+       ├─ RamVectorTableUpdate(DISPLAY_VECTORn, ...)
+       ├─ LCDC_ClearINTPendingBit()
+       ├─ LCDC_MaskINTConfig(..., DISABLE)
+       └─ NVIC_Init(Display_IRQn)</code></pre>
+  <p class="small muted">IRQ init 必须在 controller init 之后，否则
+     <code>LCDC_Init()</code> 会覆盖中断配置。</p>
+</section>
+
+<section id="buffers">
+  <h2><span class="num">05</span>Buffer 与刷屏</h2>
+
+  <h3>DC_DOUBLE / FULL</h3>
+  <p>HoneyGUI 使用两块 PSRAM full buffer：</p>
+<pre><code>dc.type        = DC_DOUBLE;
+dc.disp_buf_1  = full_fb_a;
+dc.disp_buf_2  = full_fb_b;</code></pre>
+  <p>每帧画 back buffer，结束时 <code>port_gui_lcd_update_full()</code>
+     调用 <code>rtk_display_submit()</code>。</p>
+
+  <h3>DC_RAMLESS / PFB</h3>
+  <p>HoneyGUI 使用两块 section buffer；每节渲染后 GDMA 拷贝到 full buffer，
+     帧末统一提交。</p>
+<pre><code>section buffer
+  → GDMA
+  → full PSRAM framebuffer
+  → rtk_display_submit()</code></pre>
+  <div class="callout amber">
+    PFB 是渲染策略，不代表底层没有 full framebuffer。当前 QSPI / RGB 的
+    DC_RAMLESS 都保留 full buffer。
+  </div>
+
+  <h3>RGB 双缓冲</h3>
+<pre><code>画 back buffer
+  → rtk_display_submit()
+      → arm TX_AUTO_DONE
+      → LCDC_DMA_Infinite_Buf_Update(new_fb)
+      → 等 TX_AUTO_DONE
+      → 确认 CURR_SAR 在 new_fb 内
+  → return
+  → 下一帧写旧 buffer</code></pre>
+  <p>等待时 GUI 线程 suspend，其它线程可运行。等待不是 CPU 空转，而是
+     buffer 仍被 DMA 扫描的依赖。要彻底消除该等待需要第三块 full buffer。</p>
+</section>
+
+<section id="panels">
+  <h2><span class="num">06</span>选屏与构建</h2>
+  <p>选屏不再写死在 <code>board_display.c</code>。HoneyGUI 通过
+     <code>prj.conf</code> 选一个 panel，<code>board_display_new()</code>
+     根据 Kconfig 创建对应 handle。</p>
+
+<pre><code># QSPI/SDI：只开一个
+CONFIG_REALTEK_LCD_SH8601Z_410_502_QSPI=y
+# CONFIG_REALTEK_LCD_ST7801N_466_466_QSPI=y
+# CONFIG_REALTEK_LCD_ST77916_360_360_QSPI=y
+# CONFIG_REALTEK_LCD_GC9B71_360_360_QSPI=y
+# CONFIG_REALTEK_LCD_AUTO_360_360_QSPI=y
+
+# RGB：先关 QSPI，再开一个
+# CONFIG_REALTEK_LCD_EK9716_800_480_RGB=y
+# CONFIG_REALTEK_LCD_JD9165BA_1024_600_RGB=y</code></pre>
+
+  <table>
+    <tr><th>面板</th><th>Config</th><th>Bus</th></tr>
+    <tr><td>SH8601Z 410×502</td><td><code>..._SH8601Z_410_502_QSPI</code></td>
+        <td><code>board_sdi_sh8601_bus</code></td></tr>
+    <tr><td>ST7801N 466×466</td><td><code>..._ST7801N_466_466_QSPI</code></td>
+        <td><code>board_sdi_st7801n_bus</code></td></tr>
+    <tr><td>ST77916 360×360</td><td><code>..._ST77916_360_360_QSPI</code></td>
+        <td><code>board_sdi_auto_360_bus</code></td></tr>
+    <tr><td>GC9B71 360×360</td><td><code>..._GC9B71_360_360_QSPI</code></td>
+        <td><code>board_sdi_auto_360_bus</code></td></tr>
+    <tr><td>Auto 360×360</td><td><code>..._AUTO_360_360_QSPI</code></td>
+        <td><code>board_sdi_auto_360_bus</code></td></tr>
+    <tr><td>EK9716 800×480</td><td><code>..._EK9716_800_480_RGB</code></td>
+        <td><code>board_rgb_bus</code></td></tr>
+    <tr><td>JD9165BA 1024×600</td><td><code>..._JD9165BA_1024_600_RGB</code></td>
+        <td><code>board_rgb_bus</code></td></tr>
+  </table>
+
+  <div class="callout">
+    RGB 还要调整 <code>CONFIG_REALTEK_LCD_MAX_WIDTH</code>：<br>
+    EK9716 → 800；JD9165BA → 1024。
+  </div>
+
+  <h3>manifest</h3>
+  <p><code>registry/panels.json</code> 是唯一面板清单，生成：</p>
+  <ul>
+    <li><code>registry/Kconfig.panels</code></li>
+    <li><code>registry/panel_registry.cmake</code></li>
+    <li><code>registry/panel_sources.py</code>（兼容输出）</li>
+  </ul>
+  <p>SDI / RGB 的 source、Kconfig、CMake 都从同一份 manifest 生成。</p>
+</section>
+
+<section id="build-flow">
+  <h2><span class="num">07</span>构建链路</h2>
+  <p class="lead">从 <code>prj.conf</code> 到最终链接进应用的完整路径。</p>
+
+  <div class="flow">
+    <div class="node">dashboard / honeygui<br><code>prj.conf</code></div>
+    <div class="arrow">↓</div>
+    <div class="node">Kconfig<br>
+      <code>CONFIG_REALTEK_DISPLAY_USE_PANEL_MANIFEST=y</code><br>
+      <code>CONFIG_REALTEK_LCD_SH8601Z_410_502_QSPI=y</code><br>
+      <code>CONFIG_REALTEK_LCD_DC_DOUBLE=y</code>
+    </div>
+    <div class="arrow">↓</div>
+    <div class="node">display Kconfig 引入 device manifest<br>
+      <code>modules/display/Kconfig</code><br>
+      <code>orsource "../device/registry/Kconfig.panels"</code>
+    </div>
+    <div class="arrow">↓</div>
+    <div class="node">生成选屏宏<br>
+      <code>CONFIG_REALTEK_LCD_*_QSPI</code><br>
+      <code>CONFIG_REALTEK_LCD_*_RGB</code>
+    </div>
+    <div class="arrow">↓</div>
+    <div class="node">CMake 构建 device library<br>
+      <code>modules/device/CMakeLists.txt</code><br>
+      <code>registry/panel_registry.cmake</code><br>
+      <code>core/ + panel/ + boards/</code>
+    </div>
+    <div class="arrow">↓</div>
+    <div class="node library">librealtek_device_driver_library.a</div>
+    <div class="arrow">↓</div>
+    <div class="node">应用链接<br>
+      <code>target_link_libraries(app PRIVATE<br>
+      &nbsp;&nbsp;realtek_device_driver_library)</code>
+    </div>
+    <div class="arrow">↓</div>
+    <div class="node">运行时选屏<br>
+      <code>board_display_new()</code><br>
+      <code>rtk_display_init()</code><br>
+      <code>rtk_display_submit()</code>
+    </div>
+  </div>
+
+  <h3>Kconfig 到 CMake 的关键点</h3>
+  <table>
+    <tr><th>阶段</th><th>输入</th><th>输出 / 作用</th></tr>
+    <tr><td>应用配置</td><td><code>prj.conf</code></td>
+        <td>选择 manifest、panel、DC_DOUBLE/PFB、MAX_WIDTH</td></tr>
+    <tr><td>Kconfig</td><td><code>Kconfig.panels</code></td>
+        <td>生成 <code>CONFIG_REALTEK_LCD_*</code> 宏</td></tr>
+    <tr><td>CMake</td><td><code>panel_registry.cmake</code></td>
+        <td>根据宏选 panel source，生成 <code>RTK_8773G_PANEL_SOURCES</code></td></tr>
+    <tr><td>静态库</td><td><code>modules/device/CMakeLists.txt</code></td>
+        <td>编译为 <code>realtek_device_driver_library</code></td></tr>
+    <tr><td>应用链接</td><td>应用 <code>CMakeLists.txt</code></td>
+        <td>把 device library 链入 <code>app</code></td></tr>
+    <tr><td>运行</td><td><code>board_display_new()</code></td>
+        <td>根据同一个宏选择 SH8601 / ST7801N / RGB 等</td></tr>
+  </table>
+
+  <div class="callout amber">
+    <b>注意：</b><code>prj.conf</code> 只负责“选哪个面板/哪种 buffer”，
+    不直接写 pin。pin/clock 在 <code>board_display.c</code> 的
+    <code>board_*_bus</code> 中；panel 数据只描述命令和几何。
+  </div>
+
+  <h3>Dashboard 接入点</h3>
+<pre><code>applications/dashboard/
+├── prj.conf                         # panel / buffer 选择
+├── CMakeLists.txt                   # link device library
+└── port/ui/gui_port_dc.c            # board_display_new + rtk_display_submit</code></pre>
+  <p>Dashboard 使用 <code>rtl87x3g_sample</code> 时，device 的
+     <code>boards/CMakeLists.txt</code> 同时接受
+     <code>CONFIG_BOARD_RTL87X3G_SAMPLE</code> 和
+     <code>CONFIG_BOARD_RTL87X3G_EVB</code>，因此
+     <code>board_display.c</code> 会进入 device library。</p>
+
+  <h3>整理后的目录</h3>
+<pre><code>modules/device/
+├── core/
+├── panel/{sdi,rgb}/
+├── boards/rtl87x3g/
+├── registry/
+│   ├── panels.json
+│   ├── Kconfig.panels
+│   ├── panel_registry.cmake
+│   ├── panel_sources.py
+│   └── panel_registry.py
+├── zephyr/
+│   ├── display/
+│   ├── touch/8773G/
+│   └── key_button/8773G/
+├── docs/
+├── ci/
+└── legacy/
+    ├── 8762D/{lcd,touch}/
+    ├── 8762G/{lcd,touch}/
+    ├── 8773E/{lcd,touch,key_button,knob}/
+    └── 8773G/{touch,key_button}/</code></pre>
+</section>
+
+<section id="legacy">
+  <h2><span class="num">08</span>Legacy 清理</h2>
+  <p>旧 SDK 使用 display 冻结副本；device 仓库已移除 8773G legacy。</p>
+  <table>
+    <tr><th>已移除</th><th>说明</th></tr>
+    <tr><td><code>device/legacy/8773G/lcd/</code>（已移除）</td>
+        <td>ST7265 / ST7701S / ST7789 / ST77916 8080</td></tr>
+    <tr><td><code>rtl87x3g-display-lcd-8080.c</code></td><td>旧 8080 wrapper</td></tr>
+    <tr><td><code>rtl87x3g-display-lcd-rgb.c</code></td><td>旧 RGB wrapper</td></tr>
+    <tr><td><code>rtl87x3g-display-lcd-spi.c</code></td><td>旧 SPI wrapper</td></tr>
+    <tr><td><code>rtk_sdi_hal_*</code></td><td>旧 default-handle 兼容层</td></tr>
+    <tr><td><code>rtk_sdi_bind_panel()</code></td><td>不再需要</td></tr>
+    <tr><td><code>rtk_sdi_set_default()</code></td><td>不再需要</td></tr>
+  </table>
+  <p><code>rtk_sdi_get_default()</code> 保留，仅给 auto-detect panel 的
+     <code>ops->init()</code> 使用。</p>
+  <p class="small muted">display 的 legacy Kconfig 仍可能保留
+     HX8369 / ST7265 / ST7789 / ST77916_8080 等旧符号，这是旧 SDK/其它
+     SoC 范围，不属于 8773G device 清理。</p>
+</section>
+
+<section id="os">
+  <h2><span class="num">09</span>Zephyr / FreeRTOS</h2>
+  <p>公共层只使用已有 OS 封装，不直接依赖 Zephyr 或 FreeRTOS API。</p>
+
+<pre><code>os_sem_create()
+os_sem_take()
+os_sem_give()
+
+RamVectorTableUpdate(DISPLAY_VECTORn, handler)
+NVIC_Init(Display_IRQn)</code></pre>
+
+  <p>Zephyr 不把 <code>IRQ_CONNECT</code> 放进公共 device 层；
+     FreeRTOS 也不需要额外实现 <code>Display_IRQHandler</code>。
+     两端都通过 <code>os_sem_*</code> 和 RAM vector table 适配。</p>
+
+  <h3>Zephyr display API</h3>
+  <table>
+    <tr><th>display_write</th><th>SDI</th><th>RGB</th></tr>
+    <tr><td>full frame</td><td><code>rtk_display_commit()</code></td>
+        <td><code>rtk_display_commit()</code></td></tr>
+    <tr><td>region</td><td><code>rtk_display_write_region()</code></td>
+        <td><code>-ENOTSUP</code></td></tr>
+  </table>
+  <p>Zephyr wrapper 在 <code>POST_KERNEL</code> 只注册设备；真实硬件 init
+     仍在 <code>gui_server_init()</code> 之后。</p>
+</section>
+
+<section id="build">
+  <h2><span class="num">10</span>构建与验证</h2>
+  <table>
+    <tr><th>构建</th><th>配置</th><th>结果</th></tr>
+    <tr><td>默认 QSPI</td><td>SH8601Z / DC_DOUBLE</td>
+        <td>FLASH 416608 B，RAM 33528 B</td></tr>
+    <tr><td>Dashboard</td><td>rtl87x3g_sample / QSPI / DC_DOUBLE</td>
+        <td>FLASH 706888 B，RAM 54480 B</td></tr>
+    <tr><td>PFB SDI</td><td>SH8601Z / DC_RAMLESS</td>
+        <td>FLASH 416756 B，DSPRAM 38400 B</td></tr>
+    <tr><td>PFB EK9716</td><td>RGB / DC_RAMLESS</td>
+        <td>PASS，DSPRAM 64000 B</td></tr>
+    <tr><td>PFB JD9165BA</td><td>RGB / DC_RAMLESS</td>
+        <td>PASS，DSPRAM 80 KB</td></tr>
+  </table>
+  <p>已验证：</p>
+  <ul>
+    <li>QSPI full 显示；</li>
+    <li>PFB 实机显示；</li>
+    <li>RGB 地址切换 + TX_AUTO_DONE 中断；</li>
+    <li>submit 后不再卡死。</li>
+  </ul>
+</section>
+
+<section id="next">
+  <h2><span class="num">11</span>后续工作</h2>
+  <ol>
+    <li><b>超时恢复</b>：<code>rtk_rgb_confirm_switch()</code> 目前无限等
+        <code>CURR_SAR</code>，需要加超时。</li>
+    <li><b>有限提交超时</b>：GUI 当前使用 <code>RTK_DISPLAY_WAIT_FOREVER</code>，
+        可改为有限超时并记录错误。</li>
+    <li><b>DBIB 实机</b>：统一使用 <code>TX_AUTO_DONE</code>，需 DBIB 面板确认。</li>
+    <li><b>RGB 性能</b>：测量 submit 等待时间；若帧率不足，再评估 triple buffer。</li>
+    <li><b>Dcache</b>：当前 <code>port_lcd_dcache_clean()</code> 处于
+        <code>#if 0</code>，硬件确认后再决定是否恢复。</li>
+  </ol>
+</section>
+
+<p class="small muted" style="margin:24px 0 8px">
+  文档对应代码：<code>modules/device/core</code>、
+  <code>modules/device/registry</code>、
+  <code>realtek-app/samples/honeygui/src/gui/gui_port/gui_port_dc.c</code>。
+</p>
+</main>
+</div>
+</body>
+</html>

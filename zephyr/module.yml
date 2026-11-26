@@ -1,0 +1,5 @@
+name: device
+build:
+  cmake: .
+  settings:
+    dts_root: ./zephyr
