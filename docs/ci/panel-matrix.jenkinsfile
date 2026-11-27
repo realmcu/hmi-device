@@ -19,14 +19,14 @@ pipeline {
     stages {
         stage('Panel registry') {
             steps {
-                sh 'python modules/device/registry/panel_registry.py --check'
+                sh 'python modules/device/output/display/registry/panel_registry.py --check'
             }
         }
 
         stage('8773G QSPI build matrix') {
             steps {
                 // Use --jobs N when the agent has enough CPU/disk.
-                sh 'python modules/device/ci/panel_matrix.py --all --jobs 1'
+                sh 'python modules/device/docs/ci/panel_matrix.py --all --jobs 1'
             }
         }
     }

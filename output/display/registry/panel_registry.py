@@ -7,9 +7,9 @@ The manifest registry/panels.json is the single source of truth for:
   - registry/panel_sources.py        (compatibility output)
 
 Usage (from the west workspace root):
-  python modules/device/registry/panel_registry.py --check
-  python modules/device/registry/panel_registry.py --generate
-  python modules/device/registry/panel_registry.py --list
+  python modules/device/output/display/registry/panel_registry.py --check
+  python modules/device/output/display/registry/panel_registry.py --generate
+  python modules/device/output/display/registry/panel_registry.py --list
 """
 
 from __future__ import annotations
@@ -20,19 +20,20 @@ import re
 import sys
 from pathlib import Path
 
-DEVICE_ROOT = Path(__file__).resolve().parents[1]
+DEVICE_ROOT = Path(__file__).resolve().parents[3]
 MODULES_ROOT = DEVICE_ROOT.parent
 WORKSPACE = MODULES_ROOT.parent
 DISPLAY_ROOT = MODULES_ROOT / "display"
-REGISTRY = DEVICE_ROOT / "registry"
+DEVICE_DISPLAY_ROOT = DEVICE_ROOT / "output" / "display"
+REGISTRY = DEVICE_DISPLAY_ROOT / "registry"
 MANIFEST = REGISTRY / "panels.json"
 KCONFIG = DISPLAY_ROOT / "Kconfig"
 GEN_KCONFIG = REGISTRY / "Kconfig.panels"
 GEN_CMAKE = REGISTRY / "panel_registry.cmake"
 GEN_PY = REGISTRY / "panel_sources.py"
 
-CORE_CMAKE = DEVICE_ROOT / "core" / "CMakeLists.txt"
-PANEL_CMAKE = DEVICE_ROOT / "panel" / "CMakeLists.txt"
+CORE_CMAKE = DEVICE_DISPLAY_ROOT / "core" / "CMakeLists.txt"
+PANEL_CMAKE = DEVICE_DISPLAY_ROOT / "panel" / "CMakeLists.txt"
 GENERAL_CMAKE = DEVICE_ROOT / "legacy" / "CMakeLists.txt"
 WRAPPER_CMAKE = DEVICE_ROOT / "zephyr" / "display" / "CMakeLists.txt"
 
@@ -233,9 +234,9 @@ def check_generated(panels: list[dict]) -> list[str]:
 def check_kconfig(panels: list[dict]) -> list[str]:
     errors = []
     kconfig = KCONFIG.read_text(encoding="utf-8")
-    if not re.search(r'^\s*(?:rsource|orsource)\s+"\.\./device/registry/Kconfig\.panels"\s*$',
+    if not re.search(r'^\s*(?:rsource|orsource)\s+"\.\./device/output/display/registry/Kconfig\.panels"\s*$',
                      kconfig, re.M):
-        errors.append('Kconfig must source "../device/registry/Kconfig.panels"')
+        errors.append('Kconfig must source "../device/output/display/registry/Kconfig.panels"')
 
     gen = GEN_KCONFIG.read_text(encoding="utf-8") if GEN_KCONFIG.exists() else ""
     for p in panels:
@@ -262,7 +263,7 @@ def check_registration(panels: list[dict]) -> list[str]:
         errors.append("Zephyr 8773G LCD CMakeLists.txt does not use SDI enabled flag")
 
     for p in panels:
-        source = DEVICE_ROOT / p["source"]
+        source = DEVICE_DISPLAY_ROOT / p["source"]
         if not source.exists():
             errors.append(f"source missing: {p['source']}")
 

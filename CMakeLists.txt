@@ -25,9 +25,7 @@ if(TARGET realtek_display_driver_library)
 endif()
 
 add_subdirectory(legacy)
-add_subdirectory(boards)
-add_subdirectory(core)
-add_subdirectory(panel)
+add_subdirectory(output/display)
 
 if(ZEPHYR_BASE)
     add_subdirectory(zephyr)

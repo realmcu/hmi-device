@@ -6,8 +6,8 @@ This is the CI build matrix companion of panel_registry.py:
   - panel_matrix.py --all       catches compile/link failures (slow)
 
 Example (from the west workspace root):
-  python modules/device/registry/panel_registry.py --check
-  python modules/device/ci/panel_matrix.py --all --jobs 1
+  python modules/device/output/display/registry/panel_registry.py --check
+  python modules/device/docs/ci/panel_matrix.py --all --jobs 1
 
 The script creates a temporary Kconfig fragment for each panel, selecting that
 panel and disabling the other manifest panels, then runs west build.
@@ -28,10 +28,10 @@ import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
-DEVICE_ROOT = Path(__file__).resolve().parents[1]
+DEVICE_ROOT = Path(__file__).resolve().parents[2]
 MODULE_ROOT = DEVICE_ROOT.parent
 WORKSPACE = MODULE_ROOT.parent
-MANIFEST = DEVICE_ROOT / "registry" / "panels.json"
+MANIFEST = DEVICE_ROOT / "output" / "display" / "registry" / "panels.json"
 
 
 def load_manifest() -> dict:

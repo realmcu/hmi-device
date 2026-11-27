@@ -11,7 +11,7 @@ if(1) #set to 1 to enable or variable to for depnedency
 	
     file(GLOB HEADERS "*.h" "*.hpp")
 
-    include(${CMAKE_CURRENT_LIST_DIR}/../../registry/panel_registry.cmake)
+    include(${CMAKE_CURRENT_LIST_DIR}/../../output/display/registry/panel_registry.cmake)
 
     if(CONFIG_REALTEK_DISPLAY_USE_PANEL_MANIFEST OR RTK_8773G_SDI_ENABLED OR
        CONFIG_REALTEK_LCD_AUTO_360_360_QSPI)

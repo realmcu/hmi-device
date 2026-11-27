@@ -3,6 +3,17 @@
 This repository contains external device drivers grouped by SoC, board,
 interface, and device function.
 
+## Phase 1 Layout
+
+```text
+device/
+├── output/display/       # 8773G display core, panels, boards, registry
+├── input/                # new input devices (touch/keyboard/key/knob)
+├── zephyr/               # Zephyr adapters
+├── legacy/               # legacy SoC drivers
+└── docs/                 # architecture docs and CI
+```
+
 ## Branch Model
 
 - `master` contains documentation, branch conventions, and the branch index.

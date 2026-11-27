@@ -378,7 +378,7 @@ CONFIG_REALTEK_LCD_SH8601Z_410_502_QSPI=y
     <div class="arrow">↓</div>
     <div class="node">display Kconfig 引入 device manifest<br>
       <code>modules/display/Kconfig</code><br>
-      <code>orsource "../device/registry/Kconfig.panels"</code>
+      <code>orsource "../device/output/display/registry/Kconfig.panels"</code>
     </div>
     <div class="arrow">↓</div>
     <div class="node">生成选屏宏<br>
@@ -388,8 +388,8 @@ CONFIG_REALTEK_LCD_SH8601Z_410_502_QSPI=y
     <div class="arrow">↓</div>
     <div class="node">CMake 构建 device library<br>
       <code>modules/device/CMakeLists.txt</code><br>
-      <code>registry/panel_registry.cmake</code><br>
-      <code>core/ + panel/ + boards/</code>
+      <code>output/display/registry/panel_registry.cmake</code><br>
+      <code>output/display/{core,panel,boards}</code>
     </div>
     <div class="arrow">↓</div>
     <div class="node library">librealtek_device_driver_library.a</div>
@@ -435,33 +435,30 @@ CONFIG_REALTEK_LCD_SH8601Z_410_502_QSPI=y
 ├── CMakeLists.txt                   # link device library
 └── port/ui/gui_port_dc.c            # board_display_new + rtk_display_submit</code></pre>
   <p>Dashboard 使用 <code>rtl87x3g_sample</code> 时，device 的
-     <code>boards/CMakeLists.txt</code> 同时接受
+     <code>output/display/boards/CMakeLists.txt</code> 同时接受
      <code>CONFIG_BOARD_RTL87X3G_SAMPLE</code> 和
      <code>CONFIG_BOARD_RTL87X3G_EVB</code>，因此
      <code>board_display.c</code> 会进入 device library。</p>
 
   <h3>整理后的目录</h3>
 <pre><code>modules/device/
-├── core/
-├── panel/{sdi,rgb}/
-├── boards/rtl87x3g/
-├── registry/
-│   ├── panels.json
-│   ├── Kconfig.panels
-│   ├── panel_registry.cmake
-│   ├── panel_sources.py
-│   └── panel_registry.py
+├── output/
+│   └── display/
+│       ├── core/
+│       ├── panel/{sdi,rgb}/
+│       ├── boards/rtl87x3g/
+│       └── registry/
+├── input/                  # touch / keyboard / key / knob（后续）
 ├── zephyr/
 │   ├── display/
 │   ├── touch/8773G/
 │   └── key_button/8773G/
-├── docs/
-├── ci/
-└── legacy/
-    ├── 8762D/{lcd,touch}/
-    ├── 8762G/{lcd,touch}/
-    ├── 8773E/{lcd,touch,key_button,knob}/
-    └── 8773G/{touch,key_button}/</code></pre>
+├── legacy/
+│   ├── 8762D/{lcd,touch}/
+│   ├── 8762G/{lcd,touch}/
+│   ├── 8773E/{lcd,touch,key_button,knob}/
+│   └── 8773G/{touch,key_button}/
+└── docs/                   # 文档 + ci</code></pre>
 </section>
 
 <section id="legacy">
@@ -551,8 +548,8 @@ NVIC_Init(Display_IRQn)</code></pre>
 </section>
 
 <p class="small muted" style="margin:24px 0 8px">
-  文档对应代码：<code>modules/device/core</code>、
-  <code>modules/device/registry</code>、
+  文档对应代码：<code>modules/device/output/display</code>、
+  <code>modules/device/output/display/registry</code>、
   <code>realtek-app/samples/honeygui/src/gui/gui_port/gui_port_dc.c</code>。
 </p>
 </main>

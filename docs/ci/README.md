@@ -8,13 +8,13 @@ panels.
 Do not edit these by hand; run:
 
 ```bash
-python modules/device/registry/panel_registry.py --generate
+python modules/device/output/display/registry/panel_registry.py --generate
 ```
 
 | Generated file | Consumer |
 |---|---|
-| `registry/Kconfig.panels` | display `Kconfig` via `rsource "../device/registry/Kconfig.panels"` |
-| `registry/panel_registry.cmake` | `core`, `panel`, `zephyr/display` |
+| `registry/Kconfig.panels` | display `Kconfig` via `orsource "../device/output/display/registry/Kconfig.panels"` |
+| `registry/panel_registry.cmake` | `output/display/core`, `output/display/panel`, `zephyr/display` |
 | `registry/panel_sources.py` | compatibility output; no current consumer |
 
 `panels.json` entries carry `interface: "SDI"` or `"RGB"`. The generator emits
@@ -23,7 +23,7 @@ one source list for both, plus separate SDI/RGB lists and selection guards.
 ## Validation
 
 ```bash
-python modules/device/registry/panel_registry.py --check
+python modules/device/output/display/registry/panel_registry.py --check
 ```
 
 This catches:
@@ -41,7 +41,7 @@ manifest.
 ## Build matrix
 
 ```bash
-python modules/device/ci/panel_matrix.py --all --jobs 1
+python modules/device/docs/ci/panel_matrix.py --all --jobs 1
 ```
 
 For each `build: true` panel it creates a temporary Kconfig fragment, selects
