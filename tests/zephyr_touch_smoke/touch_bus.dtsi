@@ -1,0 +1,19 @@
+/* Compile-smoke wiring; verify pads on actual hardware. */
+#include <zephyr/dt-bindings/gpio/realtek-rtl87x3g-gpio.h>
+#include <zephyr/dt-bindings/pinctrl/rtl87x3g-pinctrl.h>
+
+&gpioa { status = "okay"; };
+&pinctrl {
+    touch_i2c1_default: touch_i2c1_default {
+        group1 {
+            psels = <RTL87X3G_PSEL(I2C1_CLK, ADC_0, DIR_OUT, DRV_HIGH, PULL_UP)>,
+                    <RTL87X3G_PSEL(I2C1_DAT, ADC_1, DIR_OUT, DRV_HIGH, PULL_UP)>;
+        };
+    };
+};
+&i2c1 {
+    pinctrl-0 = <&touch_i2c1_default>;
+    pinctrl-names = "default";
+    status = "okay";
+    clock-frequency = <400000>;
+};

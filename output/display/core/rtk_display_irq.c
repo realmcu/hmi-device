@@ -8,8 +8,7 @@
 
 #include "os_sync.h"
 #include "rtl_lcdc.h"
-#include "rtl876x_nvic.h"
-#include "vector_table.h"
+#include "rtk_display_soc.h"
 
 static void *display_sync_sem;
 static bool irq_initialized;
@@ -34,22 +33,20 @@ int rtk_display_irq_init(void)
         return 0;
     }
 
-    if (!os_sem_create(&display_sync_sem, "lcd_sync", 0, 1))
+    if (display_sync_sem == NULL &&
+        !os_sem_create(&display_sync_sem, "lcd_sync", 0, 1))
     {
         display_sync_sem = NULL;
         return -1;
     }
 
-    RamVectorTableUpdate(DISPLAY_VECTORn, rtk_display_irq_handler);
-
     LCDC_ClearINTPendingBit(LCDC_CLR_TX_AUTO_DONE);
     LCDC_MaskINTConfig(LCDC_INT_MASK_TX_AUTO_DONE, DISABLE);
 
-    NVIC_InitTypeDef nvic = {0};
-    nvic.NVIC_IRQChannel = Display_IRQn;
-    nvic.NVIC_IRQChannelPriority = 3;
-    nvic.NVIC_IRQChannelCmd = ENABLE;
-    NVIC_Init(&nvic);
+    if (rtk_display_soc_irq_install(rtk_display_irq_handler) != 0)
+    {
+        return -1;
+    }
 
     irq_initialized = true;
     return 0;

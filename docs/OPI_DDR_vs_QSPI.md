@@ -68,7 +68,7 @@ typedef enum {
 } T_RTK_SDI_IF;
 ```
 
-- QSPI：`rtk_sdi_8773g.c`，走 `rtk_sdi_bus` + `rtk_sdi_hal_*`；
+- QSPI：`controller/lcdc/rtk_sdi_lcdc.c`，使用共享 LCDC/DBIC 主体及 `rtk_display_soc_*` 平台服务；
 - OPI DDR：`rtk_sdi_opi_ddr_<soc>.c`，走自己的 bus/ops，不进入 QSPI 的 `LCDC_SPICCmd(0x32)` 路径；
 - 如果将来 8773G 也出现 OPI DDR 面板，只增加 8773G 的 OPI 控制器，不修改 QSPI 控制器。
 

@@ -3,6 +3,13 @@
 
 cmake_minimum_required(VERSION 3.10)
 
+# This wrapper consumes the existing 8773G board and DT contract. Other SoCs
+# create shared controllers from application-supplied bus data, not this board.
+if(NOT CONFIG_REALTEK_DISPLAY_LCDC_SHARED OR
+   NOT (CONFIG_SOC_SERIES_RTL87X3G OR CONFIG_SOC_SERIES_RTL8773G))
+    return()
+endif()
+
 
 # Define a variable for the library name
 if(1) #set to 1 to enable or variable to for depnedency

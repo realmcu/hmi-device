@@ -40,6 +40,6 @@ endif()
 
 # Add sources and include directory only when any LCD is enabled
 if(SOURCES)
-    target_sources(${HW_DISPLAY_TARGET_NAME} PRIVATE ${SOURCES})
-    target_include_directories(${HW_DISPLAY_TARGET_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+    target_sources(${LIBRARY_NAME} PRIVATE ${SOURCES})
+    target_include_directories(${LIBRARY_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 endif()

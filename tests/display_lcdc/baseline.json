@@ -1,0 +1,138 @@
+{
+  "output/display/core/rtk_sdi_8773g.c": {
+    "sha256_lf": "79a557efbf4779387680159676f9d1006589bca55ef6de3c94ea4d4c3cf158b0",
+    "functions": [
+      "rtk_sdi_bus_write_cmd",
+      "rtk_sdi_clear_screen",
+      "rtk_sdi_deinit",
+      "rtk_sdi_delay_ms",
+      "rtk_sdi_delete",
+      "rtk_sdi_enter_dlps",
+      "rtk_sdi_exit_partial_mode",
+      "rtk_sdi_get_TE_type",
+      "rtk_sdi_get_height",
+      "rtk_sdi_get_pixel_bits",
+      "rtk_sdi_get_width",
+      "rtk_sdi_init",
+      "rtk_sdi_new_panel",
+      "rtk_sdi_power_off",
+      "rtk_sdi_power_on",
+      "rtk_sdi_read_id",
+      "rtk_sdi_send_seq",
+      "rtk_sdi_set_TE_type",
+      "rtk_sdi_set_brightness",
+      "rtk_sdi_set_display",
+      "rtk_sdi_set_partial_mode",
+      "rtk_sdi_set_window",
+      "rtk_sdi_start_transfer",
+      "rtk_sdi_transfer_cleanup",
+      "rtk_sdi_write_cmd"
+    ]
+  },
+  "output/display/core/rtk_rgb_8773g.c": {
+    "sha256_lf": "7ca09a9cd28316de52230f9cffe1781487dc97907568ccd336238a052d7c47c5",
+    "functions": [
+      "rtk_rgb_confirm_switch",
+      "rtk_rgb_deinit",
+      "rtk_rgb_delete",
+      "rtk_rgb_get_height",
+      "rtk_rgb_get_pixel_bits",
+      "rtk_rgb_get_width",
+      "rtk_rgb_init",
+      "rtk_rgb_new_panel",
+      "rtk_rgb_power_off",
+      "rtk_rgb_power_on",
+      "rtk_rgb_update_framebuffer"
+    ]
+  },
+  "output/display/core/rtk_display.c": {
+    "sha256_lf": "d39c58ea9adad879dcd2034cc0063c8206be30d5eaf9c1e4ceee000284b5b002",
+    "functions": [
+      "rtk_display_commit",
+      "rtk_display_deinit",
+      "rtk_display_delete",
+      "rtk_display_get_height",
+      "rtk_display_get_pixel_bits",
+      "rtk_display_get_type",
+      "rtk_display_get_width",
+      "rtk_display_init",
+      "rtk_display_new_rgb",
+      "rtk_display_new_sdi",
+      "rtk_display_power_off",
+      "rtk_display_power_on",
+      "rtk_display_submit",
+      "rtk_display_wait_complete",
+      "rtk_display_write_region"
+    ]
+  },
+  "output/display/core/rtk_display.h": {
+    "sha256_lf": "e97a7f0ba9c967e05967133a8ef5c484377f0b473a916ad625e896993890f54d",
+    "functions": []
+  },
+  "output/display/core/rtk_display_types.h": {
+    "sha256_lf": "70ae508348f761aec3666fb8e69f5b986c5cba98e417b537cdb9e481d674f91a",
+    "functions": []
+  },
+  "output/display/core/rtk_sdi.h": {
+    "sha256_lf": "bd919c6e1902a40a8bb4dee72f7a06c95b69258e6641d73ddc80567d8a96ee5f",
+    "functions": []
+  },
+  "output/display/core/rtk_rgb.h": {
+    "sha256_lf": "46272506b3af2f2ece9e48aba0a54dc175b93945de0df86eb565c282ac8d4f06",
+    "functions": []
+  },
+  "output/display/boards/CMakeLists.txt": {
+    "sha256_lf": "59942d8ac1bcfb579de9f16efe89dedeea7bd6f46b5f3ac9ee61befb4c703315",
+    "functions": []
+  },
+  "output/display/boards/rtl87x3g/board_display.c": {
+    "sha256_lf": "f5acdad73660e25207bc6d6bb33f2343758c10bd86fd774589b4ce6024531f72",
+    "functions": []
+  },
+  "output/display/boards/rtl87x3g/board_display.h": {
+    "sha256_lf": "81c991cf7fff08bfa06119945e5f25f52592bf83e87c3d780c38dfbf68ee64eb",
+    "functions": []
+  },
+  "output/display/panel/rgb/ek9716_800_480_rgb.c": {
+    "sha256_lf": "ba60d02c7575a6f3ba69fd05fc25bf61b16611a93b3e15b6801b8ab4e30fee13",
+    "functions": [
+      "rtk_rgb_new_panel_ek9716"
+    ]
+  },
+  "output/display/panel/rgb/jd9165ba_1024_600_rgb.c": {
+    "sha256_lf": "ddc18a696d773681ff15073b0d7b8e2829ee546ee216425bf4a87a50695e5c50",
+    "functions": [
+      "rtk_rgb_new_panel_jd9165ba"
+    ]
+  },
+  "output/display/panel/sdi/auto_360_360_qspi.c": {
+    "sha256_lf": "d11e5b07f8e5d8a60c0baa280e2cb4e92c165f2ae93ccc9bf715e9364c97c077",
+    "functions": [
+      "rtk_sdi_new_panel_auto_360_360"
+    ]
+  },
+  "output/display/panel/sdi/gc9b71_360_360_qspi.c": {
+    "sha256_lf": "29ff5fe8eaa5141861ee64880a8b1e5cc7d38e92083d529c462786d099bec780",
+    "functions": [
+      "rtk_sdi_new_panel_gc9b71_360_360"
+    ]
+  },
+  "output/display/panel/sdi/sh8601z_410_502_qspi.c": {
+    "sha256_lf": "1201fa8e5e84a3dc63f31ff8731e859173e567e2cfaabcbda677c2cbc7897a41",
+    "functions": [
+      "rtk_sdi_new_panel_sh8601"
+    ]
+  },
+  "output/display/panel/sdi/st77916_360_360_qspi.c": {
+    "sha256_lf": "f1c423efeea4da16e6c65c819344a128de62d5e876e4b8521dc645060139238a",
+    "functions": [
+      "rtk_sdi_new_panel_st77916_360_360"
+    ]
+  },
+  "output/display/panel/sdi/st7801n_466_466_qspi.c": {
+    "sha256_lf": "f9a7f35ebfdc5ce4ab645131697072b2a3d597614a4ed721982e3b19cccba36b",
+    "functions": [
+      "rtk_sdi_new_panel_st7801n"
+    ]
+  }
+}

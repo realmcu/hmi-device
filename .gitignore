@@ -1,6 +1,8 @@
 # Build output
 build/
 out/
+__pycache__/
+*.py[cod]
 
 # Editor and OS files
 *.swp

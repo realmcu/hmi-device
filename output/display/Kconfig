@@ -1,0 +1,16 @@
+# Copyright (c) 2026 Realtek Semiconductor Corp.
+# SPDX-License-Identifier: Apache-2.0
+
+config REALTEK_DISPLAY_LCDC_SHARED
+    bool "Use shared 8762G/8773E/8773G LCDC device controllers"
+    depends on REALTEK_DISPLAY
+    depends on SOC_SERIES_RTL87X2G || SOC_SERIES_RTL8773E || SOC_SERIES_RTL87X3E || SOC_SERIES_RTL87X3G || SOC_SERIES_RTL8773G
+    default y if SOC_SERIES_RTL87X3G || SOC_SERIES_RTL8773G
+    select REALTEK_DISPLAY_ENABLE_LCDC
+    help
+        Share SDI/DBIC and RGB/eDPI device logic, with SoC clock, Pad and IRQ
+        ports. 8773E and 8762G must supply their real SDK/HAL and board bus
+        data. No new board definitions are supplied by this option.
+        This replaces legacy LCD device sources on the selected SoC; legacy
+        touch/key drivers remain available. 8773G retains its existing default.
+        Supported bus clocks: 8773G 200/280 MHz, 8773E 200 MHz, 8762G 100 MHz.

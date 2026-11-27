@@ -1,0 +1,11 @@
+#include "touch_bus.dtsi"
+&i2c1 {
+    touch_device: touch@15 {
+        compatible = "hynitron,cst820";
+        reg = <0x15>;
+        irq-gpios = <&gpioa 2 GPIO_ACTIVE_HIGH>;
+        rst-gpios = <&gpioa 3 GPIO_ACTIVE_HIGH>;
+        gesture-release-timeout-ms = <30>;
+        status = "okay";
+    };
+};

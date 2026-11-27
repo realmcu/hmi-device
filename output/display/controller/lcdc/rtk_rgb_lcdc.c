@@ -7,13 +7,11 @@
 #include <string.h>
 
 #include "rtk_rgb.h"
+#include "rtk_display_soc.h"
 
 #include "rtl_lcdc_edpi.h"
 #include "rtl_lcdc_dma.h"
 
-#include "rtl876x_rcc.h"
-#include "rtl876x_pinmux.h"
-#include "platform_utils.h"
 
 #define RTK_RGB_DMA_CHANNEL_NUM   0
 #define RTK_RGB_DMA_CHANNEL_INDEX LCDC_DMA_Channel0
@@ -72,10 +70,7 @@ static void rgb_pad_config(const T_RTK_RGB_BUS *bus)
         {
             continue;
         }
-        Pad_Config(bus->data[i], PAD_PINMUX_MODE, PAD_IS_PWRON, PAD_PULL_UP,
-                   PAD_OUT_DISABLE, PAD_OUT_HIGH);
-        Pad_HighSpeedFuncSel(bus->data[i], HS_Func0);
-        Pad_HighSpeedMuxSel(bus->data[i], FROM_CORE_DOMAIN);
+        rtk_display_soc_pad_bus(bus->data[i], true, true);
     }
 
     const uint32_t ctrl[] = { bus->pclk, bus->hsync, bus->vsync, bus->de };
@@ -85,16 +80,12 @@ static void rgb_pad_config(const T_RTK_RGB_BUS *bus)
         {
             continue;
         }
-        Pad_Config(ctrl[i], PAD_PINMUX_MODE, PAD_IS_PWRON, PAD_PULL_UP,
-                   PAD_OUT_DISABLE, PAD_OUT_HIGH);
-        Pad_HighSpeedFuncSel(ctrl[i], HS_Func0);
-        Pad_HighSpeedMuxSel(ctrl[i], FROM_CORE_DOMAIN);
+        rtk_display_soc_pad_bus(ctrl[i], true, true);
     }
 
     if (bus->rst != RTK_DISPLAY_PIN_NONE)
     {
-        Pad_Config(bus->rst, PAD_SW_MODE, PAD_IS_PWRON, PAD_PULL_NONE,
-                   PAD_OUT_ENABLE, PAD_OUT_HIGH);
+        rtk_display_soc_pad_output(bus->rst, true);
     }
 }
 
@@ -105,28 +96,23 @@ static void rgb_reset(const rtk_rgb_t *rgb)
 
     if (bus->vddi != RTK_DISPLAY_PIN_NONE)
     {
-        Pad_Config(bus->vddi, PAD_SW_MODE, PAD_IS_PWRON, PAD_PULL_NONE,
-                   PAD_OUT_ENABLE, PAD_OUT_HIGH);
+        rtk_display_soc_pad_output(bus->vddi, true);
     }
     if (bus->avdd != RTK_DISPLAY_PIN_NONE)
     {
-        Pad_Config(bus->avdd, PAD_SW_MODE, PAD_IS_PWRON, PAD_PULL_NONE,
-                   PAD_OUT_ENABLE, PAD_OUT_HIGH);
+        rtk_display_soc_pad_output(bus->avdd, true);
     }
     if (bus->rst == RTK_DISPLAY_PIN_NONE)
     {
         return;
     }
 
-    Pad_Config(bus->rst, PAD_SW_MODE, PAD_IS_PWRON, PAD_PULL_NONE,
-               PAD_OUT_ENABLE, PAD_OUT_HIGH);
-    platform_delay_ms(p->reset_pre_ms);
-    Pad_Config(bus->rst, PAD_SW_MODE, PAD_IS_PWRON, PAD_PULL_NONE,
-               PAD_OUT_ENABLE, PAD_OUT_LOW);
-    platform_delay_ms(p->reset_low_ms);
-    Pad_Config(bus->rst, PAD_SW_MODE, PAD_IS_PWRON, PAD_PULL_NONE,
-               PAD_OUT_ENABLE, PAD_OUT_HIGH);
-    platform_delay_ms(p->reset_post_ms);
+    rtk_display_soc_pad_output(bus->rst, true);
+    rtk_display_soc_delay_ms(p->reset_pre_ms);
+    rtk_display_soc_pad_output(bus->rst, false);
+    rtk_display_soc_delay_ms(p->reset_low_ms);
+    rtk_display_soc_pad_output(bus->rst, true);
+    rtk_display_soc_delay_ms(p->reset_post_ms);
 }
 
 int rtk_rgb_init(rtk_rgb_t *rgb)
@@ -144,8 +130,10 @@ int rtk_rgb_init(rtk_rgb_t *rgb)
     const T_RTK_RGB_BUS *bus = rgb->bus;
 
     rgb_pad_config(bus);
-    LCDC_Clock_Sel((bus->clock == RTK_DISPLAY_CLK_200M) ? LCDC_BUS_CLK_200M :
-                   LCDC_BUS_CLK_280M);
+    if (rtk_display_soc_clock_config(bus->clock) != 0)
+    {
+        return -1;
+    }
 
     LCDC_InitTypeDef lcdc_init = {0};
     lcdc_init.LCDC_Interface = LCDC_IF_DPI;
@@ -182,8 +170,7 @@ int rtk_rgb_init(rtk_rgb_t *rgb)
     rgb_reset(rgb);
     if (bus->bl != RTK_DISPLAY_PIN_NONE)
     {
-        Pad_Config(bus->bl, PAD_SW_MODE, PAD_IS_PWRON, PAD_PULL_NONE,
-                   PAD_OUT_ENABLE, PAD_OUT_HIGH);
+        rtk_display_soc_pad_output(bus->bl, true);
     }
 
     rgb->initialized = true;

@@ -17,6 +17,10 @@ typedef enum
 {
     RTK_DISPLAY_CLK_200M = 0,
     RTK_DISPLAY_CLK_280M,
+    /* Preserve the original 200M/280M values for existing board data. */
+    RTK_DISPLAY_CLK_40M,
+    RTK_DISPLAY_CLK_100M,
+    RTK_DISPLAY_CLK_160M,
 } T_RTK_DISPLAY_CLK;
 
 #define RTK_DISPLAY_PIN_NONE 0xFFFFFFFFu

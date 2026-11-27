@@ -3,8 +3,8 @@
 
 cmake_minimum_required(VERSION 3.10)
 
-# The new panel-data + bus model is 8773G-only.
-if(NOT CONFIG_SOC_SERIES_RTL87X3G)
+# Panel data is shared; the selected SoC port handles clock and Pad differences.
+if(NOT CONFIG_REALTEK_DISPLAY_LCDC_SHARED)
     return()
 endif()
 

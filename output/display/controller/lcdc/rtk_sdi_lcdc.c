@@ -7,19 +7,12 @@
 #include <string.h>
 
 #include "rtk_sdi.h"
+#include "rtk_display_soc.h"
 
 #include "rtl_lcdc_dbic.h"
 #include "rtl_lcdc_dma.h"
 
-#include "trace.h"
-#include "platform_utils.h"
 
-#include "rtl876x_rcc.h"
-#include "rtl876x_pinmux.h"
-#include "clock_manager.h"
-#include "rtl876x_nvic.h"
-#include "rtl876x_gpio.h"
-#include "vector_table.h"
 
 #define LCDC_DMA_CHANNEL_NUM              0
 #define LCDC_DMA_CHANNEL_INDEX            LCDC_DMA_Channel0
@@ -84,32 +77,19 @@ rtk_sdi_t *rtk_sdi_get_default(void)
     return default_lcd;
 }
 
-static void pad_qspi_pin(uint32_t pin, uint32_t pull)
-{
-    if (pin == RTK_DISPLAY_PIN_NONE)
-    {
-        return;
-    }
-
-    Pad_Config(pin, PAD_SW_MODE, PAD_IS_PWRON, pull, PAD_OUT_DISABLE, PAD_OUT_HIGH);
-    Pad_HighSpeedFuncSel(pin, HS_Func0);
-    Pad_HighSpeedMuxSel(pin, FROM_CORE_DOMAIN);
-}
-
 static void qspi_pad_config(const T_RTK_SDI_BUS *bus)
 {
-    pad_qspi_pin(bus->cs, PAD_PULL_UP);
-    pad_qspi_pin(bus->clk, PAD_PULL_UP);
-    pad_qspi_pin(bus->d0, PAD_PULL_UP);
-    pad_qspi_pin(bus->d1, PAD_PULL_UP);
-    pad_qspi_pin(bus->d2, PAD_PULL_UP);
-    pad_qspi_pin(bus->d3, PAD_PULL_UP);
-    pad_qspi_pin(bus->te, PAD_PULL_DOWN);
+    rtk_display_soc_pad_bus(bus->cs, false, true);
+    rtk_display_soc_pad_bus(bus->clk, false, true);
+    rtk_display_soc_pad_bus(bus->d0, false, true);
+    rtk_display_soc_pad_bus(bus->d1, false, true);
+    rtk_display_soc_pad_bus(bus->d2, false, true);
+    rtk_display_soc_pad_bus(bus->d3, false, true);
+    rtk_display_soc_pad_bus(bus->te, false, false);
 
     if (bus->rs != RTK_DISPLAY_PIN_NONE)
     {
-        Pad_Config(bus->rs, PAD_SW_MODE, PAD_IS_PWRON, PAD_PULL_NONE, PAD_OUT_ENABLE,
-                   PAD_OUT_HIGH);
+        rtk_display_soc_pad_output(bus->rs, true);
     }
 }
 
@@ -120,8 +100,7 @@ static void pad_output(uint32_t pin, bool high)
         return;
     }
 
-    Pad_Config(pin, PAD_SW_MODE, PAD_IS_PWRON, PAD_PULL_NONE, PAD_OUT_ENABLE,
-               high ? PAD_OUT_HIGH : PAD_OUT_LOW);
+    rtk_display_soc_pad_output(pin, high);
 }
 
 static void panel_power_rails_on(const rtk_sdi_t *lcd)
@@ -160,15 +139,12 @@ static void panel_reset(const rtk_sdi_t *lcd)
         return;
     }
 
-    Pad_Config(bus->rst, PAD_SW_MODE, PAD_IS_PWRON, PAD_PULL_NONE, PAD_OUT_ENABLE,
-               PAD_OUT_HIGH);
-    platform_delay_ms(p->reset_pre_ms);
-    Pad_Config(bus->rst, PAD_SW_MODE, PAD_IS_PWRON, PAD_PULL_NONE, PAD_OUT_ENABLE,
-               PAD_OUT_LOW);
-    platform_delay_ms(p->reset_low_ms);
-    Pad_Config(bus->rst, PAD_SW_MODE, PAD_IS_PWRON, PAD_PULL_NONE, PAD_OUT_ENABLE,
-               PAD_OUT_HIGH);
-    platform_delay_ms(p->reset_post_ms);
+    rtk_display_soc_pad_output(bus->rst, true);
+    rtk_display_soc_delay_ms(p->reset_pre_ms);
+    rtk_display_soc_pad_output(bus->rst, false);
+    rtk_display_soc_delay_ms(p->reset_low_ms);
+    rtk_display_soc_pad_output(bus->rst, true);
+    rtk_display_soc_delay_ms(p->reset_post_ms);
 }
 
 /* QSPI write frame: 0x02, ADDR[23:16], ADDR[15:8], ADDR[7:0], data... */
@@ -309,7 +285,7 @@ uint32_t rtk_sdi_read_id(rtk_sdi_t *lcd)
 
 void rtk_sdi_delay_ms(uint32_t ms)
 {
-    platform_delay_ms(ms);
+    rtk_display_soc_delay_ms(ms);
 }
 
 static void rtk_sdi_send_seq(const T_RTK_SDI_CMD *seq, uint16_t count)
@@ -327,7 +303,7 @@ static void rtk_sdi_send_seq(const T_RTK_SDI_CMD *seq, uint16_t count)
         }
         if (seq[i].delay_ms != 0)
         {
-            platform_delay_ms(seq[i].delay_ms);
+            rtk_display_soc_delay_ms(seq[i].delay_ms);
         }
     }
 }
@@ -373,8 +349,10 @@ int rtk_sdi_init(rtk_sdi_t *lcd)
 
     qspi_pad_config(bus);
 
-    LCDC_Clock_Sel((bus->clock == RTK_DISPLAY_CLK_200M) ? LCDC_BUS_CLK_200M :
-                   LCDC_BUS_CLK_280M);
+    if (rtk_display_soc_clock_config(bus->clock) != 0)
+    {
+        return -1;
+    }
 
     LCDC_InitTypeDef lcdc_init = {0};
     lcdc_init.LCDC_Interface = LCDC_IF_DBIC;
@@ -412,7 +390,7 @@ int rtk_sdi_init(rtk_sdi_t *lcd)
     }
     lcdc_init.LCDC_GroupSel = bus->pin_group;
     lcdc_init.LCDC_DmaThreshold = 64;
-    lcdc_init.LCDC_PhaseShift = 0x2;
+    lcdc_init.LCDC_PhaseShift = rtk_display_soc_sdi_phase_shift();
 
     LCDC_Init(&lcdc_init);
     LCDC_ClearINTPendingBit(LCDC_CLR_WAVEFORM_FINISH);
@@ -739,7 +717,7 @@ int rtk_sdi_clear_screen(rtk_sdi_t *lcd, uint32_t ARGB_color)
     }
     while (handler_reg_0x14.b.auto_write_start != RESET);
 
-    platform_delay_us(10);
+    rtk_display_soc_delay_us(10);
     LCDC_Cmd(DISABLE);
     LCDC_ClearDmaFifo();
     LCDC_ClearTxPixelCnt();
@@ -767,9 +745,7 @@ int rtk_sdi_enter_dlps(rtk_sdi_t *lcd)
         {
             continue;
         }
-        Pad_Config(pins[i], PAD_SW_MODE, PAD_IS_PWRON, PAD_PULL_DOWN,
-                   PAD_OUT_DISABLE, PAD_OUT_LOW);
-        Pad_HighSpeedMuxSel(pins[i], FROM_CORE_DOMAIN);
+        rtk_display_soc_pad_sleep(pins[i]);
     }
 
     return 0;

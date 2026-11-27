@@ -3,9 +3,10 @@
 
 cmake_minimum_required(VERSION 3.10)
 
-# Each subdirectory's CMakeLists.txt guards source files by its own per-driver
-# config. Entering with no matching config leaves SOURCES empty -- safe to add
-# unconditionally; no compilation cost.
-add_subdirectory(display)
-add_subdirectory(touch/8773G)
-add_subdirectory(key_button/8773G)
+# Touch controllers and their binding now belong to input/touch.
+if(CONFIG_REALTEK_DISPLAY)
+    add_subdirectory(display)
+endif()
+if(CONFIG_REALTEK_KEY_BUTTON_8773G_ZEPHYR)
+    add_subdirectory(key_button/8773G)
+endif()

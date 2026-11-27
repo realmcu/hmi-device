@@ -109,6 +109,7 @@
   <ol>
     <li><a href="#status">当前状态</a></li>
     <li><a href="#layers">分层</a></li>
+    <li><a href="#touch">Touch 接入</a></li>
     <li><a href="#api">统一 API</a></li>
     <li><a href="#irq">中断与等待</a></li>
     <li><a href="#buffers">Buffer 与刷屏</a></li>
@@ -123,11 +124,11 @@
 
 <main>
 <header class="hero">
-  <h1>RTL8773G LCD Device 架构</h1>
+  <h1>共享 LCDC Device 架构</h1>
   <p>SDI / DBIB / RGB 统一设备层。HoneyGUI 只负责应用层 buffer 策略，
      OS 只提供信号量和中断注册。</p>
   <div class="meta">
-    <span class="pill">Phase 1 · RTL8773G</span>
+    <span class="pill">8762G / 8773E / 8773G · shared LCDC</span>
     <span class="pill">SDI · DBIB · RGB</span>
     <span class="pill">DC_DOUBLE · DC_RAMLESS</span>
     <span class="pill">Zephyr · FreeRTOS</span>
@@ -171,6 +172,10 @@
 <section id="layers">
   <h2><span class="num">02</span>分层</h2>
   <p class="lead">PFB / FULL 属于 HoneyGUI 应用层；Zephyr / FreeRTOS 只在更下面。</p>
+  <p><code>controller/lcdc/rtk_sdi_lcdc.c</code> 与 <code>rtk_rgb_lcdc.c</code> 为三平台共享主体；
+     <code>ports/rtl8773g.c</code>、<code>rtl8773e.c</code>、<code>rtl8762g.c</code> 分离时钟、Pad、IRQ 和延时。
+     <code>boards/</code> 未修改；E/2G 应用提供自己的 bus 数据及真实 SDK/HAL。
+     当前完整 SDK 构建验证为 8773G；E/2G 的端口契约和寄存器语法测试不等同于真机支持验证。</p>
 <pre><code>HoneyGUI（应用 / UI）
   DC_DOUBLE / DC_RAMLESS
         │
@@ -191,6 +196,18 @@ Zephyr / FreeRTOS（semaphore + vector table）</code></pre>
     region = 传输 API 的区域语义。<br>
     Zephyr / FreeRTOS = OS 集成，不参与 display 语义。
   </div>
+
+  <h3 id="touch">Touch 接入</h3>
+  <p><code>gui_port_indev.c</code> 不再直接包含具体 touch 头文件，也不直接使用
+     <code>DEVICE_DT_GET()</code>。它只调用公共 touch API：</p>
+<pre><code>gui_port_indev.c
+  → rtk_touch_get_data()
+  → rtk_touch_get_timeout_ms()
+  → input/touch/core/rtk_touch.c
+  → input/touch/ports/zephyr/rtk_touch_zephyr.c
+  → input/touch/controller/zephyr/（CHSC6417 / CHSC6413 / CST816D / CST820）</code></pre>
+  <p><code>rtk_touch_zephyr.c</code> 负责 DT 节点、设备 ready 检查和默认设备注册；
+     <code>gui_port_indev.c</code> 不再关心具体 touch 芯片。</p>
 </section>
 
 <section id="api">

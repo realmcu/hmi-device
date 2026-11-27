@@ -11,7 +11,7 @@ if(1) #set to 1 to enable or variable to for depnedency
 
     file(GLOB HEADERS "*.h" "*.hpp")
 
-	# CHSC6417: yield to Zephyr-style variant (in device/zephyr/touch/8773G/) when its
+	# CHSC6417: yield to Zephyr-style variant (in device/input/touch/controller/zephyr/) when its
 	# _ZEPHYR config is set; otherwise build the general driver.
 	if(CONFIG_REALTEK_TOUCH_CHSC6417_ZEPHYR)
 		# Yield.

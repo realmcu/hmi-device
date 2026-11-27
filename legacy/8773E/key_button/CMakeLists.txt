@@ -11,6 +11,6 @@ if(CONFIG_REALTEK_KEY_BUTTON)
 endif()
 
 if(SOURCES)
-    target_sources(${HW_DISPLAY_TARGET_NAME} PRIVATE ${SOURCES})
-    target_include_directories(${HW_DISPLAY_TARGET_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+    target_sources(${LIBRARY_NAME} PRIVATE ${SOURCES})
+    target_include_directories(${LIBRARY_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 endif()

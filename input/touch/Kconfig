@@ -1,0 +1,81 @@
+# Copyright (c) 2026 Realtek Semiconductor Corp.
+# SPDX-License-Identifier: Apache-2.0
+
+config REALTEK_TOUCH
+    bool "Enable Realtek touch core"
+    default y if REALTEK_HONEYGUI
+    help
+        Platform-independent touch data and default-device registration API.
+        This can be enabled without any display or touch controller.
+        Without a registered device the API returns released/zero data.
+        HoneyGUI enables the core by default to retain its no-touch fallback.
+
+menu "Legacy touch controllers"
+
+config REALTEK_TOUCH_CHSC6417
+    bool "Enable legacy Realtek touch CHSC6417"
+    select REALTEK_TOUCH
+    default n
+
+config REALTEK_TOUCH_CHSC6413
+    bool "Enable legacy Realtek touch CHSC6413"
+    select REALTEK_TOUCH
+    default n
+
+config REALTEK_TOUCH_GT911
+    bool "Enable legacy Realtek touch GT911"
+    select REALTEK_TOUCH
+    default n
+
+config REALTEK_TOUCH_CST816D
+    bool "Enable legacy Realtek touch CST816D"
+    select REALTEK_TOUCH
+    default n
+
+config REALTEK_TOUCH_CST820
+    bool "Enable legacy Realtek touch CST820"
+    select REALTEK_TOUCH
+    default n
+
+endmenu
+
+config REALTEK_INPUT_INIT_PRIORITY
+    int "Realtek input device initialization priority"
+    range 51 99
+    default 60
+    help
+        POST_KERNEL initialization priority for input drivers using this setting.
+        Keep it after the board's GPIO and I2C initialization priorities.
+
+choice REALTEK_TOUCH_ZEPHYR_CONTROLLER
+    prompt "Zephyr touch controller"
+    optional
+    help
+        Select at most one controller: the compatibility raw-data API and
+        default-device binding currently support one controller per build.
+
+config REALTEK_TOUCH_CHSC6417_ZEPHYR
+    bool "CHSC6417"
+    select REALTEK_TOUCH
+    select I2C
+    select GPIO
+
+config REALTEK_TOUCH_CHSC6413_ZEPHYR
+    bool "CHSC6413"
+    select REALTEK_TOUCH
+    select I2C
+    select GPIO
+
+config REALTEK_TOUCH_CST816D_ZEPHYR
+    bool "CST816D"
+    select REALTEK_TOUCH
+    select I2C
+    select GPIO
+
+config REALTEK_TOUCH_CST820_ZEPHYR
+    bool "CST820"
+    select REALTEK_TOUCH
+    select I2C
+    select GPIO
+
+endchoice

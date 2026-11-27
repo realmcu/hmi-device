@@ -3,14 +3,14 @@
 
 cmake_minimum_required(VERSION 3.10)
 
-if(NOT CONFIG_REALTEK_DISPLAY)
+# Input devices do not require the display module or its hardware library.
+if(NOT CONFIG_REALTEK_DISPLAY AND NOT CONFIG_REALTEK_TOUCH AND
+   NOT CONFIG_REALTEK_KEY_BUTTON)
     return()
 endif()
 
 set(HW_DEVICE_TARGET_NAME realtek_device_driver_library)
 set(LIBRARY_NAME ${HW_DEVICE_TARGET_NAME})
-# Device subdirectories historically use the display module's target variable.
-set(HW_DISPLAY_TARGET_NAME ${HW_DEVICE_TARGET_NAME})
 
 if(ZEPHYR_BASE)
     zephyr_library_named(${LIBRARY_NAME})
@@ -18,23 +18,28 @@ else()
     add_library(${LIBRARY_NAME} STATIC)
 endif()
 
-# Device drivers use display hardware headers/includes.  The display module is
-# expected to be processed first (manifest order); guard for non-display builds.
-if(TARGET realtek_display_driver_library)
+# Only display devices consume display controller headers and implementations.
+# Declare the target dependency even if that module is processed later.
+if(CONFIG_REALTEK_DISPLAY)
     target_link_libraries(${LIBRARY_NAME} PUBLIC realtek_display_driver_library)
+    add_subdirectory(output/display)
 endif()
 
 add_subdirectory(legacy)
-add_subdirectory(output/display)
+add_subdirectory(input)
 
 if(ZEPHYR_BASE)
     add_subdirectory(zephyr)
 endif()
 
-if(CONFIG_REALTEK_DISPLAY_GUI_ACC AND TARGET guiLib)
+if(CONFIG_REALTEK_DISPLAY AND CONFIG_REALTEK_DISPLAY_GUI_ACC AND TARGET guiLib)
     target_link_libraries(${LIBRARY_NAME} PRIVATE guiLib)
 endif()
 
-if(NOT ZEPHYR_BASE)
+# The pure touch core needs no HAL. Display and legacy input drivers do.
+if(NOT ZEPHYR_BASE AND (CONFIG_REALTEK_DISPLAY OR CONFIG_REALTEK_KEY_BUTTON OR
+   CONFIG_REALTEK_TOUCH_CHSC6417 OR CONFIG_REALTEK_TOUCH_CHSC6413 OR
+   CONFIG_REALTEK_TOUCH_GT911 OR CONFIG_REALTEK_TOUCH_CST816D OR
+   CONFIG_REALTEK_TOUCH_CST820))
     target_link_libraries(${LIBRARY_NAME} PUBLIC halLib)
 endif()
